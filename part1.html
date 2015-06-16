@@ -1,0 +1,211 @@
+<!doctype html>
+<html lang="en">
+<head>
+	<meta name="viewport" content="user-scalable=no, initial-scale=1, maximum-scale=1, minimum-scale=1, width=device-width, height=device-height, target-densitydpi=device-dpi" />
+	<title>Phaser - Making your first game, part 1</title>
+	<script type="text/javascript" src="js/phaser.min.js"></script>
+    <style type="text/css">
+        body {
+            margin: 0;
+        }
+    </style>
+</head>
+<body>
+
+<script type="text/javascript">
+
+
+var game = new Phaser.Game(440, 440, Phaser.AUTO, '', { preload: preload, create: create, update: update });
+game.time;
+timer = 10,
+countDownText, timerEvent;
+
+function preload() {
+	game.load.image('blue', 'assets/blue.png');
+	game.load.image('red', 'assets/red.png');
+	game.load.image('green', 'assets/green.png');
+	game.load.image('yellow', 'assets/yellow.png');
+}
+
+function create() {
+
+	game.physics.startSystem(Phaser.Physics.ARCADE);
+
+
+
+	bluebox = game.add.sprite(10,10, 'blue');
+	bluebox.originalPosition = bluebox.position.clone();
+	bluebox.matchColor = 'blue';
+	redbox = game.add.sprite(366,10, 'red');
+	redbox.originalPosition = redbox.position.clone();
+	redbox.matchColor = "red";
+	yellowbox = game.add.sprite(10,366, 'yellow');
+	yellowbox.originalPosition = yellowbox.position.clone();
+	yellowbox.matchColor = "yellow";
+	greenbox = game.add.sprite(366,366, 'green');
+	greenbox.originalPosition = greenbox.position.clone();
+	greenbox.matchColor = "green";
+	bluebox.inputEnabled = true;
+	bluebox.input.enableDrag();
+	redbox.inputEnabled = true;
+	redbox.input.enableDrag();
+	yellowbox.inputEnabled = true;
+	yellowbox.input.enableDrag();
+	greenbox.inputEnabled = true;
+	greenbox.input.enableDrag();
+	bluebox.events.onDragStart.add(startDrag, this);
+  bluebox.events.onDragStop.add(stopDrag, this);
+	redbox.events.onDragStart.add(startDrag, this);
+  redbox.events.onDragStop.add(stopDrag, this);
+	yellowbox.events.onDragStart.add(startDrag, this);
+	yellowbox.events.onDragStop.add(stopDrag, this);
+	greenbox.events.onDragStart.add(startDrag, this);
+	greenbox.events.onDragStop.add(stopDrag, this);
+	game.physics.arcade.enable(bluebox);
+	bluebox.body.collideWorldBounds = true;
+	game.physics.arcade.enable(redbox);
+	redbox.body.collideWorldBounds = true;
+	game.physics.arcade.enable(yellowbox);
+	yellowbox.body.collideWorldBounds = true;
+	game.physics.arcade.enable(greenbox);
+	greenbox.body.collideWorldBounds = true;
+	target = game.add.sprite(210,210, 'blue');
+	target.matchColor = "blue";
+	game.physics.arcade.enable(target);
+
+
+	function startDrag(currentSprite) {
+  // adding a parameter to 'startDrag' and 'stopDrag' allows us to determine which sprite is being dragged
+	  currentSprite.body.moves = false;
+	}
+	function stopDrag(currentSprite) {
+		// overlap provides a boolean return value to determine if an overlap has occurred - we'll use this to snap the sprite back in the event it doesn't overlap
+			// ... no overlap occurred so snap the sprite back to the original position by copying the values to the current position
+			currentSprite.position.copyFrom(currentSprite.originalPosition);
+	}
+
+	game.scale.setShowAll();
+	game.scale.pageAlignHorizontally = true;
+	game.scale.pageAlignVeritcally = true;
+	game.scale.refresh();
+
+	score = 0;
+
+	scoreText = game.add.text(170, 6, 'Score: 0', { fontSize: '22px', fill: '#fff' });
+
+	timerEvent = this.time.events.loop(Phaser.Timer.SECOND, updateTimer);
+
+	countDownText = this.add.text(198, 36, timer, { fontSize: "22px", fill: "#fff", align: "center" });
+
+	stateText = game.add.text(game.world.centerX,game.world.centerY,' ', { fontSize: '24px Arial', fill: '#fff' });
+    stateText.anchor.setTo(0.5, 0.5);
+    stateText.visible = false;
+
+		countDownText.visible = true;
+		scoreText.visible = true;
+
+}
+
+function update() {
+	game.physics.arcade.overlap(bluebox, target, increment, null, this);
+	game.physics.arcade.overlap(redbox, target, increment, null, this);
+	game.physics.arcade.overlap(yellowbox, target, increment, null, this);
+	game.physics.arcade.overlap(greenbox, target, increment, null, this);
+
+	function increment(box, target){
+
+		if (box.matchColor === target.matchColor){
+			score = score + 1;
+			scoreText.text = 'Score: ' + score;
+			target.kill();
+			box.input.draggable = false;
+			game.time.events.add(50, function(){
+				box.position.copyFrom(box.originalPosition);
+			});
+			game.time.events.add(200, function() {
+			drawNewTarget();
+			box.input.draggable = true;
+			});
+		}
+	}
+
+
+
+}
+
+function updateTimer() {
+  timer -= 1;
+  if(timer === 0) {
+    //To remove event:
+    //game.time.events.remove(timerEvent);
+		target.kill();
+		bluebox.kill();
+		redbox.kill();
+		yellowbox.kill();
+		greenbox.kill();
+		countDownText.visible = false;
+		scoreText.visible = false;
+		stateText.text="GAME OVER \nYour Score: " + score + "\nClick to Play Again!";
+		stateText.visible = true;
+
+		game.input.onTap.addOnce(restart,this);
+
+	} else {
+    countDownText.setText(timer);
+  }
+  centerCountDownText();
+}
+
+function centerCountDownText() {
+  countDownText.x = (game.width / 2) - (countDownText.width / 2);
+}
+
+function restart () {
+
+    //  A new level starts
+
+
+	    bluebox.revive();
+			redbox.revive();
+			yellowbox.revive();
+			greenbox.revive();
+			drawNewTarget();
+
+	    //hides the text
+	    stateText.visible = false;
+			score = 0;
+			countDownText.visible = true;
+			scoreText.visible = true;
+			timer = 11;
+
+}
+
+function drawNewTarget(){
+	var whichColor = Math.floor((Math.random() * 4) + 1);
+	var setX = Math.floor((Math.random() * 270) + 1);
+	setX = setX + 50;
+	var setY = Math.floor((Math.random() * 270) + 1);
+	setY = setY + 50;
+	if (whichColor === 1){
+		target = game.add.sprite(setX,setY, 'blue');
+		target.matchColor = "blue";
+	}
+	else if (whichColor === 2){
+		target = game.add.sprite(setX,setY, 'red');
+		target.matchColor = "red";
+	}
+	else if (whichColor === 3){
+		target = game.add.sprite(setX,setY, 'yellow');
+		target.matchColor = "yellow";
+	}
+	else {
+		target = game.add.sprite(setX,setY, 'green');
+		target.matchColor = "green";
+	}
+	game.physics.arcade.enable(target);
+}
+
+</script>
+
+</body>
+</html>
