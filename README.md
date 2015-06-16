@@ -1,4 +1,4 @@
-<h2>4swipe<h2>
+<h2>4swipe</h2>
 This is my first effort at using <a href="http://phaser.io">Phaser.io</a> to construct a game. The concept is very simple -- just drag the corner boxes onto the corresponding colored target in the center.
 
 <h3>Online Demo</h3>
